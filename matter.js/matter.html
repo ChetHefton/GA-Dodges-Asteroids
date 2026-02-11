@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js" integrity="sha512-6+7rTBmR6pRFe9fa0vCFjFaHZj/XYa7774bEBzRtxgdpIJOS++R3cKd6Prg/eJmxtsJotd8KAg4g57uuVQsZKA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+    <a id="menu" class="btnHover" href="menu.html">Menu</a>
+    <h2 id="level" class="tally">Level: </h2>
+    <h2 id="score" class="tally">Score: </h2>
+    <div id="gameContainer"></div>
+    <canvas id="effectCanvas"></canvas>
+    <script>
+        //resize and init canvas
+        const effectCanvas = document.getElementById("effectCanvas");
+        const effectCtx = effectCanvas.getContext("2d");
+        effectCanvas.height = window.innerHeight;
+        effectCanvas.width = window.innerWidth;
+        //load in the sprite
+        let flameFrames = [];
+        let totalFlameFrames = 25;
+        let loadedFrames = 0;
+        let allFlameFramesLoaded = false;
+
+        let isScalingFlame = false;
+        let currentFlameFrame = 0;
+        let frameDelay = 3; // how many ticks per frame
+        let frameTick = 0;
+
+        for (let i = 0; i < totalFlameFrames; i++) {
+            const img = new Image();
+            img.src = `assets/flame1/png/${String(i).padStart(2, '0')}.png`;
+            img.onload = () => {
+                loadedFrames++;
+                if (loadedFrames === totalFlameFrames) {
+                    allFlameFramesLoaded = true;
+                    requestAnimationFrame(flameLoop);
+                }
+            };
+            flameFrames.push(img);
+        }
+
+        let score = document.getElementById('score');
+        let levelTag = document.getElementById('level');
+        let scoreNum = 0;
+        let level = 1;
+        let gameOver = false;
+
+        function randomInterval(min, max) {
+            if (!Number.isInteger(min) || !Number.isInteger(max)) {
+                return Math.random() * (max - min) + min;
+            }
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        //will generate an array of vertices in a circle shape
+        function circVerts(centerX, centerY) {
+            const vertices = [];
+
+            //random sides (6-12)
+            let sides = randomInterval(6, 12);
+
+            for(let j = 0; j < sides; ++j){
+            //random radius(20-50)
+            const radius = randomInterval(20, 40);
+                const angle = (Math.PI * 2 * j)/sides;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                vertices.push({ x, y });
+            }
+            return vertices;
+        }
+
+    // module aliases
+const Engine = Matter.Engine,
+    Render = Matter.Render,
+    Runner = Matter.Runner,
+    Bodies = Matter.Bodies,
+    Body = Matter.Body,
+    Mouse = Matter.Mouse,
+    MouseConstraint = Matter.MouseConstraint,
+    Events = Matter.Events,
+    Composite = Matter.Composite;
+
+// create an engine
+const engine = Engine.create();
+engine.gravity.y = 0;
+let obstacles = [];
+// create a renderer
+const render = Render.create({
+    element: document.getElementById("gameContainer"),
+    engine: engine,
+    options: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        wireframes: false,
+        background: '#91c5ff'
+    }
+});
+
+// create box and a ground
+let player = Body.create({
+    position: { x: innerWidth/6, y: innerHeight/2.3},
+    isStatic: false,
+    frictionAir: .05,
+    angle: Math.PI/2,
+    vertices: [
+{ x: 0, y: -30 },     // Tip of the ship (top center)
+{ x: 22.5, y: 15 },   // Right edge
+{ x: 11.25, y: 30 },  // Right inward angle (bottom right)
+{ x: -11.25, y: 30 }, // Left inward angle (bottom left)
+{ x: -22.5, y: 15 }   // Left edge
+    ],
+    render: {
+        fillStyle: 'rgb(64, 184, 128)',
+        strokeStyle: '#000000',     // border color
+        lineWidth: 2                // border width
+    }
+});
+const ground = Bodies.rectangle(400, window.innerHeight-103, 10000, 30, { 
+    isStatic: true,
+    render: {
+        fillStyle: 'rgb(64, 184, 128)',
+        strokeStyle: '#000000',     // border color
+        lineWidth: .7                // border width
+    }
+});
+const topWall = Bodies.rectangle(400, -16, 10000, 30, { 
+    isStatic: true,
+    render: {
+        fillStyle: 'rgb(64, 184, 128)',
+        strokeStyle: '#000000',     // border color
+        lineWidth: .7                // border width
+    }
+});
+    const leftWall = Bodies.rectangle(0, window.innerHeight / 2, window.innerHeight, 30, { 
+    isStatic: true,
+    render: {
+        fillStyle: 'rgb(64, 184, 128)',
+        strokeStyle: '#000000',     // border color
+        lineWidth: .7 ,              // border width
+    }
+});
+    Matter.Body.rotate(leftWall, Math.PI/2);
+    const rightWall = Bodies.rectangle(window.innerWidth, window.innerHeight / 2, window.innerHeight, 30, { 
+    isStatic: true,
+    render: {
+        fillStyle: 'rgb(64, 184, 128)',
+        strokeStyle: '#000000',     // border color
+        lineWidth: .7,                // border width
+    }
+});
+    Matter.Body.rotate(rightWall, Math.PI/2);
+    let topY = window.innerHeight*.3;
+    let bottomY = window.innerHeight*.5;
+    let coveredSpace = topY + (window.innerHeight - bottomY);
+    let gapLen = window.innerHeight - coveredSpace;
+    //enables user to interact w/ bodies via mouse
+    //const mouse = Mouse.create(render.canvas);
+    //const mouseConstraint = MouseConstraint.create(engine, mouse);
+    //make obstacles
+    function createObstacle() {
+    const obstacle1 = Body.create({
+    position: { x: randomInterval((window.innerWidth+100), (window.innerWidth*2)),
+     y: randomInterval(50, window.innerHeight-50) },
+    vertices: circVerts(
+        randomInterval(window.innerWidth + 100, window.innerWidth*2),
+        randomInterval(50, window.innerHeight - 50)
+    ),
+    mass: randomInterval(1, 10),
+    friction: 0,
+    frictionAir: 0,
+    isStatic: false,
+    restitution: .5,
+    render: {
+        fillStyle: 'orange',
+        strokeStyle: 'black',
+        lineWidth: 2
+    }
+    });
+    Body.setVelocity(obstacle1, { 
+        x: -randomInterval(1, 2),
+        y: -randomInterval(-1,1)
+    });
+    Body.setAngularVelocity(obstacle1, 0);
+    Composite.add(engine.world, [obstacle1]);
+    obstacles.push(obstacle1);
+    }
+    let dltCtr = 1;
+    let goingUp;
+    let goingDown;
+    let scale = 1;
+    let isScaledX = false;
+    let isScaledY = false;
+
+function drawFlameEffect(ctx, x, y) {
+    const frame = flameFrames[currentFlameFrame];
+    if (!frame || !frame.complete) return; // skip if not loaded yet
+
+    ctx.drawImage(frame, -32, -64, 64, 64);
+
+    frameTick++;
+    if (frameTick >= frameDelay) {
+        frameTick = 0;
+        currentFlameFrame = (currentFlameFrame + 1) % totalFlameFrames;
+    }
+}
+    setInterval(() => {
+        createObstacle();
+        scale += .2;
+    }, 1000/(level+scale));
+function flameLoop() {
+    requestAnimationFrame(flameLoop); // <== move this to the top to always keep looping
+
+    if (!allFlameFramesLoaded) return;
+
+    effectCtx.clearRect(0, 0, effectCanvas.width, effectCanvas.height);
+    const worldX = player.position.y;
+    const worldY = window.innerWidth - player.position.x;
+
+    drawFlameEffect(effectCtx, worldX, worldY);
+
+    console.log("Drawing frame:", currentFlameFrame);
+
+}
+requestAnimationFrame(flameLoop); // start the flame rendering loop
+
+            //move obstacles/move body right at 5 px per update (~5 px/frame)
+    Events.on(engine, 'beforeUpdate', () => { //this is the MAIN LOOP
+        
+        const velocity = Body.getVelocity(player);
+        const speed = Math.sqrt(velocity.x ** 2 + velocity.y ** 2);
+        if (speed > 20) {
+            Body.setVelocity(player, { x: 0, y: 20 });
+        }
+        xV = -randomInterval(level, level+1);
+        score.textContent = "Score: " + scoreNum;
+        levelTag.textContent = "Level: " + level;
+        if(obstacles.length == 0) {return;}
+                obstacles.forEach(element => {
+                Body.setVelocity(element, {
+                x: xV,
+                y: element.velocity.y
+            });
+        });
+    for (let i = obstacles.length-1; i >= 0; i--) {
+     if (obstacles[i].position.x <= -50) {
+            Composite.remove(engine.world, obstacles[i]);
+            obstacles.splice(i, 1); // remove from the array too
+            ++scoreNum;
+        }
+}
+    if(scoreNum > level*10){
+        ++level;
+    }
+    obstacles.forEach(element => {
+        v = randomInterval(-1, 1);
+        if(Math.round(Body.getAngularVelocity(element)*100) == 0){
+            Body.setAngularVelocity(element, v/30);
+        } else {
+            Body.setAngularVelocity(element, Body.getAngularVelocity(element));
+        }
+    })
+    
+    Body.setAngularVelocity(player, 0);
+    Body.setAngle(player, Math.PI/2);
+    Body.setPosition(player, {x: window.innerWidth/6, y: player.position.y})
+
+    });
+        document.addEventListener("keydown", (e) => {
+        let temp = Body.getVelocity(player);
+        let factor = level;
+            if (factor > 20) {
+                factor = 20;
+            } else if (factor < 5) {
+                factor = 5;
+            }
+        /*if(e.keyCode === 37){
+            //left
+            Body.setVelocity(player, {x: player.velocity.x-.1, y: player.velocity.y})
+        }*/
+        /*if(e.keyCode === 39){
+            //right
+            Body.setVelocity(player, {x: player.velocity.x+.1, y: player.velocity.y})
+        }*/
+        if(e.keyCode === 37){
+            //reset each tap
+            Body.setVelocity(player, {x: 0, y: 0})
+            //CHANGE SHAPE
+            if(isScaledX === false) {
+            Body.scale(player, 1, .5);
+            }
+            isScaledX = true;
+            //up
+            Body.setVelocity(player, {x: 0, y: player.velocity.y-(1*(factor))})
+
+        }
+        if(e.keyCode === 39){
+            //reset each tap
+            Body.setVelocity(player, {x: 0, y: 0})
+            if(isScaledY === false) {
+            Body.scale(player, 1, .5);
+            }
+            isScaledY = true;
+            //down
+            Body.setVelocity(player, {x: player.velocity.x, y: player.velocity.y+(1*factor)})
+
+        }
+        });
+        document.addEventListener("keyup", (e) => {
+            if(e.keyCode === 39){
+                Body.scale(player, 1, 2);
+                isScaledY = false;
+            }
+            if(e.keyCode === 37){
+                Body.scale(player, 1, 2);
+                isScaledX = false;
+            }
+    });
+    
+    let prevLoc = window.innerHeight/2;
+    if(player.position.y > prevLoc) {
+        goingUp = false;
+        goingDown = true;
+        prevLoc = player.position.x;
+    } else if (player.position.y < prevLoc){
+        goingUp = true;
+        goingDown = false;
+        prevLoc = player.position.x;
+    } else {
+        goingUp = false;
+        goingDown = false;
+        prevLoc = player.position.x;
+    }
+// add all of the bodies to the world
+Composite.add(engine.world, [player, ground, topWall /*mouseConstraint*/]);
+
+// run the renderer
+Render.run(render);
+Events.on(render, 'afterRender', function() {
+    if (isScalingFlame) {
+        context.scale(0.5, 1); // shrink flame on X axis
+    }
+    context.drawImage(frame, -32, -77, 64, 64);
+
+    const context = render.context;
+    const frame = flameFrames[currentFlameFrame];
+    if (!frame || !frame.complete) return;
+
+    context.save();
+    context.translate(player.position.x, player.position.y);
+    context.rotate(player.angle);
+    context.rotate(-Math.PI);
+
+    if (isScalingFlame) {
+        context.scale(0.5, 1); // squish X
+    }
+
+    context.drawImage(frame, -32, -77, 64, 64);
+    context.restore();
+
+    frameTick++;
+    if (frameTick >= frameDelay) {
+        frameTick = 0;
+        currentFlameFrame = (currentFlameFrame + 1) % totalFlameFrames;
+    }
+});
+
+// create runner
+const runner = Runner.create();
+
+// run the engine
+Runner.run(runner, engine);
+
+
+</script>
+</body>
+</html>

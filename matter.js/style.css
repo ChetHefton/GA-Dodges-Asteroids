@@ -1,0 +1,128 @@
+        /*Apply display: flex to the parent container (body), not the <a> tag:*/
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #91c5ff;
+            overflow: hidden;
+            position: relative;
+        }
+        #effectCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .btnHover {
+            transition: transform 0.3s ease;
+            -webkit-transition: transform 0.3s ease;
+            -moz-transition: transform 0.3s ease;
+            -ms-transition: transform 0.3s ease;
+            -o-transition: transform 0.3s ease;
+        }
+        .btnHover:hover {
+            transform: scale(1.2);
+            -webkit-transform: scale(1.2);
+            -moz-transform: scale(1.2);
+            -ms-transform: scale(1.2);
+            -o-transform: scale(1.2);
+}
+        .btnHover:active {
+            transform: scale(.8);
+            -webkit-transform: scale(.8);
+            -moz-transform: scale(.8);
+            -ms-transform: scale(.8);
+            -o-transform: scale(.8);
+}
+        #start {
+            font-size: 50px;
+            text-decoration: none;
+            font-variant: small-caps;
+            font-family: monospace;
+            color: white;
+            font-weight:bold;
+            padding-inline: 20px;
+            border-radius: 5px;
+            border: 3px solid white;
+            background-color: rgb(64, 184, 128);
+            box-shadow: 3px 3px 1px rgba(0, 0, 0, .5);
+}
+        #menu {
+            position:absolute;
+            padding-inline: 15px;
+            border-radius: 5px;
+            border: 3px solid white;
+            background-color: rgb(64, 184, 128);
+            box-shadow: 3px 3px 1px rgba(0, 0, 0, .5);
+            bottom: 4.1%;
+            left: 5.5%;
+            color: aliceblue;
+            text-decoration: none;
+            font-variant: small-caps;
+            font-family: monospace;
+            font-size: 40px;
+            padding-bottom: 1px;
+            font-weight:bold;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            -ms-border-radius: 5px;
+            -o-border-radius: 5px;
+}
+        #score {
+            position:absolute;
+            padding-inline: 15px;
+            padding-top: 0px;
+            padding-bottom: 1px;
+            border-radius: 5px;
+            border: 3px solid white;
+            background-color: rgb(64, 184, 128);
+            box-shadow: 3px 3px 1px rgba(0, 0, 0, .5);
+            bottom: 0.3%;
+            right: 15.5%;
+            color: aliceblue;
+            text-decoration: none;
+            font-variant: small-caps;
+            font-family: monospace;
+            font-size: 40px;
+            font-weight:bold;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            -ms-border-radius: 5px;
+            -o-border-radius: 5px;
+}
+        #level {
+            position:absolute;
+            padding-inline: 15px;
+            padding-top: 0px;
+            padding-bottom: 1px;
+            border-radius: 5px;
+            border: 3px solid white;
+            background-color: rgb(64, 184, 128);
+            box-shadow: 3px 3px 1px rgba(0, 0, 0, .5);
+            bottom: 0.3%;
+            right: 50%;
+            color: aliceblue;
+            text-decoration: none;
+            font-variant: small-caps;
+            font-family: monospace;
+            font-size: 40px;
+            font-weight:bold;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            -ms-border-radius: 5px;
+            -o-border-radius: 5px;
+        }
+        #gameContainer {
+    position: absolute;
+    border-left: 2px solid limegreen;
+    top: -14%;
+    left: 0;
+    width: 100vh; /* full height becomes width */
+    height: 100vw; /* full width becomes height */
+    transform: rotate(-90deg) translateX(-100vh);
+    transform-origin: top left;
+    z-index: 1;
+    overflow: hidden;
+}
