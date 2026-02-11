@@ -41,3 +41,34 @@ Because the game loads assets (sprite frames), run it from a local server:
 - Python:
   ```bash
   python -m http.server
+Then open the page in your browser.
+
+### Planned: Neuroevolution (next steps)
+
+- Goal: train an agent to control the ship automatically.
+
+# Planned approach:
+
+- Replace keyboard input with NN outputs (up/down)
+
+- Inputs could include:
+
+    - player y position and velocity
+
+    - distance to nearest obstacle
+
+    - obstacle y position and relative speed
+
+    - gap / safe path estimate
+
+- Fitness:
+
+    - survival time
+
+    - score / distance traveled
+
+ -Evolution:
+
+    - select top agents
+
+    - clone + mutate weights
